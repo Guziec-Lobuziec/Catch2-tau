@@ -1,25 +1,44 @@
 #include "catch.hpp"
 
 #include <rpn.hpp>
+#include <cmath>
 
-using Catch::Matchers::EndsWith; // see "matchers"
+using Catch::Matchers::Contains; // see "matchers"
 
-TEST_CASE("Some test 2")
+TEST_CASE("Basic operation test")
 {
-    REQUIRE((10 + 2) == 12);
+    rpn testee = rpn();
+    REQUIRE(testee.count("14221 2 +") == 14223);
+    REQUIRE(testee.count("14221 2 -") == 14219);
+    REQUIRE(testee.count("3 14 2 - * 4 + 2 /") == 20);
 }
 
-SCENARIO("Simple scenario")
+TEST_CASE("Error handling")
 {
-    GIVEN("there are numbers 10 and 20")
+    rpn testee = rpn();
+    REQUIRE_THROWS_WITH(testee.count("2 l"), Contains("bad token: l"));
+    
+}
+
+SCENARIO("Exponentiation scenario")
+{
+    GIVEN("there are numbers 2, 3, rpn testee with ^ opcode")
     {
-        int x = 10, y = 20;
-        WHEN("we add them")
+        rpn testee = rpn();
+        testee.put_op("^", [](auto& s) {
+                auto a = s.back();
+                s.pop_back();
+                auto b = s.back();
+                s.pop_back();
+                auto c = std::pow(b, a);
+                s.push_back(c);
+        });
+        WHEN("we call count with 2 3 ^")
         {
-            int z = x + y;
-            THEN("the result should be 30")
+            int z = testee.count("2 3 ^");
+            THEN("the result should be 8")
             {
-                REQUIRE(z == 30);
+                REQUIRE(z == 8);
             }
         }
     }
